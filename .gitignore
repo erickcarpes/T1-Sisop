@@ -1,0 +1,6 @@
+bin/
+*.o
+*.out
+
+# Matrizes grandes geradas para os experimentos (regeneraveis via bin/gerar).
+results/grande_*.txt

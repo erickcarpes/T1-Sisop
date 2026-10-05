@@ -1,0 +1,7 @@
+### Desempenho 3000x3000 densidade 40% (min e mediana de 5 execucoes)
+Sequencial: objetos=142432 min=0.689878s mediana=0.704115s
+Paralelo t=1: objetos=142432 min=0.803632s mediana=0.861985s speedup(min)=0.86
+Paralelo t=2: objetos=142432 min=0.527207s mediana=0.556372s speedup(min)=1.31
+Paralelo t=4: objetos=142432 min=0.392762s mediana=0.396008s speedup(min)=1.76
+Paralelo t=8: objetos=142432 min=0.326059s mediana=0.352915s speedup(min)=2.12
+Paralelo t=12: objetos=142432 min=0.283797s mediana=0.303826s speedup(min)=2.43
