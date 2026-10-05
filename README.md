@@ -4,7 +4,8 @@ Trabalho pratico de **Sistemas Operacionais (PUCRS)**: contagem de objetos em
 uma imagem binaria representada por uma matriz, usando **conectividade 8**, com
 uma versao **sequencial** de referencia e uma versao **paralela** com Pthreads.
 
-- **Aluno(s):** `<preencher nomes, cartoes e GitHub>`
+- **Aluno(s):** Augusto Ely Missiaggia e Erick Marcondes de Mattos Carpes
+  (Erick: GitHub [@erickcarpes](https://github.com/erickcarpes))
 - **Disciplina:** Sistemas Operacionais - PUCRS
 - **Linguagem:** ANSI C (C89/C90), com APIs POSIX (`pthread`).
 - **Plataforma:** Linux/macOS.
