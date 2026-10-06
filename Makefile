@@ -20,10 +20,10 @@ $(BIN)/gerar: src/gerar.c | $(BIN)
 	$(CC) $(CFLAGS) src/gerar.c -o $@
 
 test: all
-	./scripts/testes.sh
+	bash scripts/testes.sh
 
 bench: all
-	./scripts/bench.sh
+	bash scripts/bench.sh
 
 clean:
 	rm -rf $(BIN)
