@@ -8,17 +8,15 @@
 #define DIRECTIONS 8
 
 /*
- * Estrategia da versao paralela:
- *   1. A matriz e dividida em uma grade de blocos retangulares (linhas x
- *      colunas). A quantidade de blocos pode ser maior que a de threads.
- *   2. Cada thread retira blocos de uma fila dinamica (contador protegido por
- *      mutex) e faz flood fill apenas dentro do bloco, escrevendo rotulos
- *      locais. Como os blocos sao disjuntos, essa fase nao tem corrida.
- *   3. Na consolidacao, as fronteiras entre blocos (horizontais, verticais e
- *      diagonais, incluindo o encontro de quatro blocos) sao varridas em
- *      paralelo. Cada uniao em um Union-Find compartilhado e protegida por
- *      mutex.
- *   4. O numero de objetos e o numero de raizes distintas do Union-Find.
+        c0 c1 | c2 c3 | c4 c5
+ r0  [  1  1 |  0  0 |  0  0 ]
+ r1  [  1  1 |  0  0 |  1  0 ]
+        ------+-------+------
+ r2  [  0  0 |  0  0 |  0  1 ]
+ r3  [  0  0 |  0  0 |  0  0 ]
+        ------+-------+------
+ r4  [  0  0 |  1  1 |  1  0 ]
+ r5  [  0  0 |  0  1 |  0  0 ]
  */
 
 typedef struct {

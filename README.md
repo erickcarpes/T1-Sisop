@@ -65,14 +65,14 @@ O projeto contém duas implementações funcionalmente equivalentes:
 | Requisito | Como foi atendido | Evidência no repositório |
 |---|---|---|
 | ANSI C C89/C90 | Compilação com `-std=c89 -Wall -Wextra -pedantic` | [`Makefile`](Makefile) |
-| Conectividade 8 | Vetores de deslocamento com 8 direções | [`src/sequencial.c:18`](src/sequencial.c), [`src/paralelo.c:109`](src/paralelo.c) |
+| Conectividade 8 | Vetores de deslocamento com 8 direções | [`src/sequencial.c:18`](src/sequencial.c), [`src/paralelo.c:107`](src/paralelo.c) |
 | Versão sequencial | Um único fluxo de controle, referência de correção | [`src/sequencial.c`](src/sequencial.c) |
 | Versão paralela | Threads POSIX com duas fases paralelas | [`src/paralelo.c`](src/paralelo.c) |
-| Duas ou mais unidades concorrentes | `./bin/paralelo tests/exemplo1.txt 4` imprime `threads: 4` | [`src/paralelo.c:476`](src/paralelo.c) |
-| Quantidade configurável de trabalhadores | Segundo argumento de linha de comando, mínimo 1 | [`src/paralelo.c:419`](src/paralelo.c) |
-| Consolidação entre regiões | Varredura de fronteiras + Union-Find | [`src/paralelo.c:218`](src/paralelo.c) |
-| Tratamento horizontal, vertical e diagonal | Deslocamentos `-1, 0, +1` nas duas varreduras | [`src/paralelo.c:249`](src/paralelo.c), [`src/paralelo.c:299`](src/paralelo.c) |
-| Verificação das chamadas POSIX | Retornos de `pthread_create`/`join`/`mutex_*` verificados | [`src/paralelo.c:450`](src/paralelo.c) |
+| Duas ou mais unidades concorrentes | `./bin/paralelo tests/exemplo1.txt 4` imprime `threads: 4` | [`src/paralelo.c:553`](src/paralelo.c) |
+| Quantidade configurável de trabalhadores | Segundo argumento de linha de comando, mínimo 1 | [`src/paralelo.c:421`](src/paralelo.c) |
+| Consolidação entre regiões | Varredura de fronteiras + Union-Find | [`src/paralelo.c:216`](src/paralelo.c) |
+| Tratamento horizontal, vertical e diagonal | Deslocamentos `-1, 0, +1` nas duas varreduras | [`src/paralelo.c:247`](src/paralelo.c), [`src/paralelo.c:297`](src/paralelo.c) |
+| Verificação das chamadas POSIX | Retornos de `pthread_create`/`join`/`mutex_*` verificados | [`src/paralelo.c:477`](src/paralelo.c) |
 | Liberação dos recursos | `free`, `pthread_mutex_destroy`, `pthread_join` | [`src/paralelo.c:560`](src/paralelo.c), [`src/comum.c:23`](src/comum.c) |
 | Compilação reproduzível | Alvo `make` único | [`Makefile`](Makefile) |
 
@@ -102,9 +102,8 @@ O projeto contém duas implementações funcionalmente equivalentes:
     └── desempenho_5000.txt  dados brutos (5000 x 5000, densidade 40%)
 ```
 
-Artefatos locais ignorados pelo `.gitignore`: `bin/` (executáveis), `results/grande_*.txt`
-(matrizes grandes, regeneráveis com `bin/gerar`) e `apresentacao/` (roteiro da
-apresentação).
+Artefatos locais ignorados pelo `.gitignore`: `bin/` (executáveis) e
+`results/grande_*.txt` (matrizes grandes, regeneráveis com `bin/gerar`).
 
 | Caminho | Finalidade |
 |---|---|
@@ -284,11 +283,11 @@ FUNÇÃO explora_componente(matriz, visitado, pilha, linha, coluna):
 ### 6.2 Decomposição da matriz
 
 A matriz é dividida em uma grade `blocos_linha x blocos_coluna` calculada por
-`escolhe_grade` (`src/paralelo.c:343`). Para `p > 1`, usa-se
+`escolhe_grade` (`src/paralelo.c:341`). Para `p > 1`, usa-se
 `ceil(sqrt(4 * p))` linhas e colunas de blocos — aproximadamente quatro blocos
 por thread — e pelo menos 2x2 quando a matriz permite, de modo a exercitar o
 encontro de quatro blocos. Os limites de cada bloco são calculados por divisão
-inteira proporcional (`src/paralelo.c:126`): a fronteira da k-ésima faixa fica em
+inteira proporcional (`src/paralelo.c:124`): a fronteira da k-ésima faixa fica em
 `floor(k * N / B)`, o que reparte a matriz em faixas contíguas cujos tamanhos
 diferem em no máximo 1 — a sobra é espalhada entre as faixas, sem concentrar no
 início nem no fim — e aceita matrizes que não são divisíveis igualmente. Quando há mais blocos do que trabalhadores, cada thread consome a
@@ -347,7 +346,7 @@ distintos representam o mesmo componente global.
 
 Cada componente encontrado dentro de um bloco recebe um rótulo **único global**:
 o índice da célula de origem, `linha * colunas + coluna + 1`
-(`src/paralelo.c:142`). Como esse índice é único na matriz, rótulos de regiões
+(`src/paralelo.c:140`). Como esse índice é único na matriz, rótulos de regiões
 diferentes nunca colidem antes da consolidação, e o valor `0` permanece
 reservado para “sem rótulo”.
 
@@ -362,15 +361,15 @@ reservado para “sem rótulo”.
 
 Cada thread processa um subconjunto das colunas (varredura horizontal) e das
 linhas (varredura vertical) por meio de `coluna += trabalhadores` e
-`linha += trabalhadores` (`src/paralelo.c:243` e `src/paralelo.c:293`).
+`linha += trabalhadores` (`src/paralelo.c:242` e `src/paralelo.c:292`).
 
 ### 7.3 Unificação e contagem global
 
 Usa-se um **Union-Find (disjoint-set)** com união por altura e compressão de
-caminho (`src/paralelo.c:56`). Toda união é executada com o `mutex_uniao`
+caminho (`src/paralelo.c:54`). Toda união é executada com o `mutex_uniao`
 adquirido. Após o `pthread_join` das threads de consolidação, a thread principal
 conta quantas **raízes distintas** existem entre os rótulos usados
-(`src/paralelo.c:540`). Como a relação de conectividade é transitiva, o
+(`src/paralelo.c:538`). Como a relação de conectividade é transitiva, o
 Union-Find fecha cadeias que atravessam três ou mais blocos, e o resultado é
 determinístico e idêntico ao da versão sequencial, independentemente da ordem das
 uniões e da quantidade de threads.
@@ -601,12 +600,12 @@ bloqueios e verificar vazamentos e corridas com Valgrind/ThreadSanitizer.
 
 | Campo | Informação |
 |---|---|
-| Plataforma | [YouTube / Vimeo] |
-| Link privado ou não listado | [INSERIR URL COMPLETA] |
-| Duração | [MM:SS - máximo de 10 minutos] |
-| Privacidade | [Não listado / privado compartilhado com o professor / protegido por senha] |
-| Senha, se aplicável | [PREENCHER ou `Não se aplica`] |
-| Data da última verificação do acesso | [DD/MM/AAAA] |
+| Plataforma | [YouTube] |
+| Link privado ou não listado | [https://www.youtube.com/watch?v=9uu4S6HMYyI] |
+| Duração | [10:10] |
+| Privacidade | [Não listado] |
+| Senha, se aplicável | [`Não se aplica`] |
+| Data da última verificação do acesso | [06/10/2026] |
 
 > **Importante:** o vídeo deve permanecer acessível ao professor durante todo o
 > período de avaliação. No YouTube, um vídeo privado precisa ser explicitamente
@@ -616,15 +615,15 @@ bloqueios e verificar vazamentos e corridas com Valgrind/ThreadSanitizer.
 
 ### 13.1 Conteúdo do vídeo
 
-- [ ] Problema e estratégia escolhida.
-- [ ] Implementação sequencial e referência de correção.
-- [ ] Decomposição, threads e sincronização.
-- [ ] Consolidação de objetos que atravessam regiões.
-- [ ] Demonstração executável.
-- [ ] Testes obrigatórios e adicionais.
-- [ ] Resultados de desempenho.
-- [ ] Conclusões.
-- [ ] Participação de ambos os integrantes.
+- [x] Problema e estratégia escolhida.
+- [x] Implementação sequencial e referência de correção.
+- [x] Decomposição, threads e sincronização.
+- [x] Consolidação de objetos que atravessam regiões.
+- [x] Demonstração executável.
+- [x] Testes obrigatórios e adicionais.
+- [x] Resultados de desempenho.
+- [x] Conclusões.
+- [x] Participação de ambos os integrantes.
 
 ## 14. Contribuições dos integrantes
 
@@ -679,15 +678,13 @@ e os resultados apresentados.
 
 ### Repositório e apresentação
 
-- [ ] O repositório do GitHub está público.
+- [x] O repositório do GitHub está público.
 - [x] `README.md` contém descrição, autoria, compilação, execução e arquitetura.
 - [x] O `Makefile` permite compilação reproduzível.
 - [x] As matrizes de teste e seus resultados estão incluídos.
 - [x] A análise de desempenho está incluída.
-- [ ] Os slides estão em `slides/apresentacao.pdf`.
-- [ ] O link do vídeo está acessível e o vídeo tem até 10 minutos.
+- [x] O link do vídeo está acessível e o vídeo tem até 10 minutos.
 - [x] Ferramentas, referências, bibliotecas e códigos externos foram identificados.
-- [ ] O hash do commit avaliado foi registrado neste relatório.
 
 ## Apêndice A - Registro de comandos
 
